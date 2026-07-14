@@ -1,0 +1,25 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+# NOTE: .terraform.lock.hcl is intentionally NOT ignored — it should be committed
+# so provider versions are reproducible across machines/CI.
+
+# Python / Dataflow local venv
+.venv/
+__pycache__/
+*.pyc
+
+# Local sample data pulled down for testing
+dataflow/sample*.json
+
+# macOS
+.DS_Store

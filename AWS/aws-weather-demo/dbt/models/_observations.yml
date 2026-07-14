@@ -1,0 +1,65 @@
+version: 2
+
+# Data-quality gate on the durable fact table (observations).
+# These are the GCP data_quality_checks.sql checks, expressed as dbt tests.
+# `dbt build` runs them in DAG order and FAILS the run on any violation.
+models:
+  - name: observations
+    description: "Typed, validated weather facts (one row per city per ingestion run)."
+    columns:
+      # --- check #1: required fields present (the DoFn's drop-if-missing, now enforced) ---
+      - name: observed_at
+        description: "UTC timestamp of the weather reading (source has no seconds; staging normalizes to :00)."
+        data_tests:
+          - not_null
+      - name: ingested_at
+        description: "UTC timestamp when the ingestion Lambda fetched and wrote the record."
+      - name: city
+        description: "City name (one of Vilnius, Riga, Tallinn, Warsaw)."
+        data_tests:
+          - not_null
+      - name: country
+        description: "ISO country of the city."
+      - name: latitude
+        description: "City latitude (decimal degrees)."
+      - name: longitude
+        description: "City longitude (decimal degrees)."
+      - name: temperature_c
+        description: "Air temperature at 2m, degrees Celsius."
+        data_tests:
+          # --- check #1 (cont.) ---
+          - not_null
+          # --- check #3: temperature within a physically sane range ---
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: -60
+                max_value: 60
+      - name: humidity_pct
+        description: "Relative humidity at 2m, percent (0-100)."
+        data_tests:
+          # --- check #4: humidity is a valid percentage ---
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 100
+      - name: wind_speed_kmh
+        description: "Wind speed at 10m, km/h (non-negative)."
+        data_tests:
+          # --- check #5: wind speed is non-negative ---
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+      - name: source_file
+        description: "Lineage: the S3 path of the raw NDJSON file this row came from (Athena $path)."
+      - name: load_date
+        description: "Partition key (YYYY-MM-DD) derived from observed_at; one S3 folder per day."
+
+    # --- check #2: no duplicate (city, observed_at) pair ---
+    # This is the WRITE_APPEND duplicate-row detector: run ingest+observations
+    # twice for the same day and this test fails = the append lesson, gated.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - city
+              - observed_at

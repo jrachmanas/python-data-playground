@@ -1,0 +1,21 @@
+name: 'weather_demo'
+version: '1.0.0'
+config-version: 2
+
+# Which profile (in profiles.yml) to use for the connection.
+profile: 'weather_demo'
+
+model-paths: ["models"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  weather_demo:
+    # Staging = the parse/validate DoFn, as ephemeral-cheap VIEWS (no storage).
+    staging:
+      +materialized: view

@@ -1,0 +1,9 @@
+# Local secrets — the RunPod API key lives here, NEVER commit it.
+.env
+# CV / skills-summary doc — kept private on this public repo (also matched by root CV_*.md).
+CV_SKILLS_SUMMARY.md
+# Handoff doc for the separate client app — local only, not for this public repo.
+INTEGRATION_HANDOFF.md
+# macOS junk
+.DS_Store
+__pycache__/

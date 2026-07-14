@@ -1,0 +1,20 @@
+weather_demo:
+  target: dev
+  outputs:
+    dev:
+      type: athena
+
+      # Athena query RESULTS go here (scratch); note: different prefix from data.
+      s3_staging_dir: "s3://weather-demo-athena-results-123456789012/dbt/"
+
+      # dbt materializations (CTAS Parquet) land here = the "warehouse storage".
+      s3_data_dir: "s3://weather-demo-curated-123456789012/"
+
+      region_name: eu-central-1
+      database: awsdatacatalog       # the Athena catalog
+      schema: weather_demo           # the Glue database dbt builds into
+      work_group: weather-demo-wg
+      threads: 4
+
+      # Use the SSO named profile (short-lived creds from `aws sso login`).
+      aws_profile_name: weather-demo
